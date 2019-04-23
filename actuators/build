@@ -1,0 +1,2 @@
+#!/bin/bash
+g++ rollactuator.cpp lib/parson.c -o rollactuator -lpaho-mqtt3c

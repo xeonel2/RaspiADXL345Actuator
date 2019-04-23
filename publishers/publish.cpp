@@ -19,7 +19,7 @@ using namespace exploringRPi;
 #define TOPIC      "SensorData/CPUTempPitchRoll"
 #define QOS        1
 #define TIMEOUT    10000L
-#define UPDATEINTERVAL 5 
+#define UPDATEINTERVAL 2 
 
 float getCPUTemperature() {        // get the CPU temperature
    int cpuTemp;                    // store as an int
