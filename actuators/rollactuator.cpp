@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
 
     MQTTClient_create(&client, ADDRESS, CLIENTID, MQTTCLIENT_PERSISTENCE_NONE, NULL);
     opts.keepAliveInterval = 20;
-    opts.cleansession = 1;
+    opts.cleansession = 0;
     opts.username = AUTHMETHOD;
     opts.password = AUTHTOKEN;
 

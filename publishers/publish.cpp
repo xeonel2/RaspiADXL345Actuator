@@ -68,10 +68,15 @@ int main(int argc, char* argv[]) {
    MQTTClient_connectOptions opts = MQTTClient_connectOptions_initializer;
    MQTTClient_message pubmsg = MQTTClient_message_initializer;
    MQTTClient_create(&client, ADDRESS, CLIENTID, MQTTCLIENT_PERSISTENCE_NONE, NULL);
+   MQTTClient_willOptions willOpts = MQTTClient_willOptions_initializer;
+   willOpts.message = "Check my power or internet or something!!";
+   willOpts.qos = 2;
+   willOpts.topicName = "SensorStatus/rpipublisher";
    opts.keepAliveInterval = 20;
    opts.cleansession = 1;
    opts.username = AUTHMETHOD;
    opts.password = AUTHTOKEN;
+   opts.will = &willOpts;
    int rc;
    if ((rc = MQTTClient_connect(client, &opts)) != MQTTCLIENT_SUCCESS) {
       cout << "Failed to connect, return code " << rc << endl;
