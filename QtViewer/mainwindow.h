@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QDateTime>
 #include "MQTTClient.h"
+#include <json-c/json.h>
+#include <string>
 
 #define ADDRESS     "tcp://192.227.147.152:1883"
 #define CLIENTID    "qtclient"
@@ -40,6 +42,10 @@ private:
     int count, time;
     MQTTClient client;
     volatile MQTTClient_deliveryToken deliveredtoken;
+    double getTemp(json_object *jObj);
+    double getPitch(json_object *jObj);
+    double getRoll(json_object *jObj);
+    char * getTimeStamp(json_object *jObj);
 
     friend void delivered(void *context, MQTTClient_deliveryToken dt);
     friend int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message);

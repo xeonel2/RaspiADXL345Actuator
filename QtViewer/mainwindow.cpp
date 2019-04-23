@@ -101,7 +101,16 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *m
 void MainWindow::on_MQTTmessage(QString payload){
     ui->outputText->appendPlainText(payload);
     ui->outputText->ensureCursorVisible();
-
+    const char* jsonString = payload.toStdString().c_str();
+    json_object *jObj = json_tokener_parse(jsonString);
+    double readingTemp = getTemp(jObj);
+    double readingPitch = getPitch(jObj);
+    double readingRoll = getRoll(jObj);
+    char * readingTimeStamp = getTimeStamp(jObj);
+    char testPrintString[100];
+    sprintf(testPrintString, "Timestamp={%s}, Temp=%fn, Pitch=%fn, Roll=%fn", readingTimeStamp, readingTemp, readingPitch, readingRoll);
+    QString testmsg = QString::fromUtf8(testPrintString);
+    ui->outputText->appendPlainText(testmsg);
     //ADD YOUR CODE HERE
 }
 
@@ -109,6 +118,60 @@ void connlost(void *context, char *cause) {
     (void)context; (void)*cause;
     // Please don't modify the Window UI from here
     qDebug() << "Connection Lost" << endl;
+}
+
+double MainWindow::getTemp(json_object *jObj) {
+    json_object_object_foreach(jObj, key, val) {
+        if (strcmp(key, "d") == 0) {
+            json_object_object_foreach(val, topicKey, topicVal) {
+            if (strcmp(topicKey, "CPUTemp") == 0) {
+               return json_object_get_double(topicVal);
+            }
+            }
+        }
+    }
+    return -1.0;
+}
+
+double MainWindow::getPitch(json_object *jObj) {
+    json_object_object_foreach(jObj, key, val) {
+        if (strcmp(key, "d") == 0) {
+            json_object_object_foreach(val, topicKey, topicVal) {
+            if (strcmp(topicKey, "Pitch") == 0) {
+               return json_object_get_double(topicVal);
+            }
+            }
+        }
+    }
+    return 0;
+}
+
+double MainWindow::getRoll(json_object *jObj) {
+    json_object_object_foreach(jObj, key, val) {
+        if (strcmp(key, "d") == 0) {
+            json_object_object_foreach(val, topicKey, topicVal) {
+            if (strcmp(topicKey, "Roll") == 0) {
+               return json_object_get_double(topicVal);
+            }
+            }
+        }
+    }
+    return 0;
+}
+
+char * MainWindow::getTimeStamp(json_object *jObj) {
+    static char timestamp[25];
+    json_object_object_foreach(jObj, key, val) {
+        if (strcmp(key, "d") == 0) {
+            json_object_object_foreach(val, topicKey, topicVal) {
+            if (strcmp(topicKey, "ReadingTime") == 0) {
+               strcpy(timestamp, json_object_get_string(topicVal));
+               return timestamp;
+
+            }
+            }
+        }
+    }
 }
 
 void MainWindow::on_disconnectButton_clicked()

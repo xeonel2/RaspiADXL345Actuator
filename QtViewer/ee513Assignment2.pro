@@ -31,7 +31,8 @@ HEADERS  += mainwindow.h \
         qcustomplot.h
 
 FORMS    += mainwindow.ui
-LIBS     += -lpaho-mqtt3c
+LIBS     += -lpaho-mqtt3c \
+         -ljson-c
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../../../usr/local/lib/release/ -lpaho-mqtt3c
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../../../usr/local/lib/debug/ -lpaho-mqtt3c
