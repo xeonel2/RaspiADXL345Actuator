@@ -4,9 +4,11 @@
 #include <fstream>
 #include <string.h>
 #include "MQTTClient.h"
+#include "ADXL345.h"
 #include <ctime>
 #define  CPU_TEMP "/sys/class/thermal/thermal_zone0/temp"
 using namespace std;
+using namespace exploringRPi;
 
 //Please replace the following address with the address of your server
 #define ADDRESS    "tcp://192.227.147.152:1883"
@@ -52,7 +54,13 @@ int main(int argc, char* argv[]) {
       cout << "Failed to connect, return code " << rc << endl;
       return -1;
    }
-   sprintf(str_payload, "{\"d\":{\"CPUTemp\": %f , \"ReadingTime\": \"%s\"}}", getCPUTemperature(), getTimeNow());
+
+   ADXL345 sensor(1,0x53);
+   sensor.setResolution(ADXL345::NORMAL);
+   sensor.setRange(ADXL345::PLUSMINUS_4_G);
+   sensor.readSensorState();
+
+   sprintf(str_payload, "{\"d\":{\"CPUTemp\": %f , \"ReadingTime\": \"%s\" ,\"Pitch\": %f, \"Roll\": %f}}", getCPUTemperature(), getTimeNow(), sensor.getPitch(), sensor.getRoll());
    pubmsg.payload = str_payload;
    pubmsg.payloadlen = strlen(str_payload);
    pubmsg.qos = QOS;

@@ -1,2 +1,2 @@
 #!/bin/bash
-g++ application.cpp I2CDevice.cpp ADXL345.cpp -o ADXL345
+g++ publish.cpp I2CDevice.cpp ADXL345.cpp -o ADXL345 -lpaho-mqtt3c
