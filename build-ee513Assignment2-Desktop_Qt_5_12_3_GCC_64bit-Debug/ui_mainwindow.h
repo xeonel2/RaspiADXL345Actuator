@@ -16,6 +16,7 @@
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QPushButton>
+#include <QtWidgets/QRadioButton>
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QToolBar>
 #include <QtWidgets/QWidget>
@@ -34,6 +35,9 @@ public:
     QPlainTextEdit *outputText;
     QPushButton *connectButton;
     QPushButton *disconnectButton;
+    QRadioButton *temperatureButton;
+    QRadioButton *pitchButton;
+    QRadioButton *rollButton;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -68,10 +72,19 @@ public:
         disconnectButton = new QPushButton(centralWidget);
         disconnectButton->setObjectName(QString::fromUtf8("disconnectButton"));
         disconnectButton->setGeometry(QRect(100, 360, 141, 29));
+        temperatureButton = new QRadioButton(centralWidget);
+        temperatureButton->setObjectName(QString::fromUtf8("temperatureButton"));
+        temperatureButton->setGeometry(QRect(250, 360, 102, 24));
+        pitchButton = new QRadioButton(centralWidget);
+        pitchButton->setObjectName(QString::fromUtf8("pitchButton"));
+        pitchButton->setGeometry(QRect(380, 360, 102, 24));
+        rollButton = new QRadioButton(centralWidget);
+        rollButton->setObjectName(QString::fromUtf8("rollButton"));
+        rollButton->setGeometry(QRect(490, 360, 102, 24));
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QString::fromUtf8("menuBar"));
-        menuBar->setGeometry(QRect(0, 0, 611, 26));
+        menuBar->setGeometry(QRect(0, 0, 611, 23));
         MainWindow->setMenuBar(menuBar);
         mainToolBar = new QToolBar(MainWindow);
         mainToolBar->setObjectName(QString::fromUtf8("mainToolBar"));
@@ -92,6 +105,9 @@ public:
         downButton->setText(QApplication::translate("MainWindow", "Down Button", nullptr));
         connectButton->setText(QApplication::translate("MainWindow", "Connect", nullptr));
         disconnectButton->setText(QApplication::translate("MainWindow", "Disconnect", nullptr));
+        temperatureButton->setText(QApplication::translate("MainWindow", "Temperature", nullptr));
+        pitchButton->setText(QApplication::translate("MainWindow", "Pitch", nullptr));
+        rollButton->setText(QApplication::translate("MainWindow", "Roll", nullptr));
     } // retranslateUi
 
 };

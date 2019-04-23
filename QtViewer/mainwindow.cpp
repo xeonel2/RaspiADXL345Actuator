@@ -10,10 +10,11 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     this->count = 50;
+    this->chosenGraph = 1;
     this->time = 0;
     this->setWindowTitle("EE513 Assignment 2");
     this->ui->customPlot->addGraph();
-    this->ui->customPlot->yAxis->setLabel("Pitch (degrees)");
+    this->ui->customPlot->yAxis->setLabel("Temperature (degrees)");
     QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
     timeTicker->setTimeFormat("%h:%m:%s");
     this->ui->customPlot->xAxis->setTicker(timeTicker);
@@ -36,7 +37,7 @@ void MainWindow::update(){
     ui->customPlot->graph(0)->addData(key,count);
     ui->customPlot->graph(0)->rescaleKeyAxis(true);
     ui->customPlot->replot();
-    QString text = QString("Value added is %1").arg(this->count);
+    QString text = QString("Value changed to is %1").arg(this->count);
     ui->outputEdit->setText(text);
 }
 
@@ -51,6 +52,13 @@ void MainWindow::on_upButton_clicked()
     this->count+=10;
     this->update();
 }
+
+void MainWindow::updateGraph(int value)
+{
+    this->count = value;
+    this->update();
+}
+
 
 void MainWindow::on_connectButton_clicked()
 {
@@ -101,17 +109,29 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *m
 void MainWindow::on_MQTTmessage(QString payload){
     ui->outputText->appendPlainText(payload);
     ui->outputText->ensureCursorVisible();
-    const char* jsonString = payload.toStdString().c_str();
-    json_object *jObj = json_tokener_parse(jsonString);
-    double readingTemp = getTemp(jObj);
-    double readingPitch = getPitch(jObj);
-    double readingRoll = getRoll(jObj);
-    char * readingTimeStamp = getTimeStamp(jObj);
-    char testPrintString[100];
-    sprintf(testPrintString, "Timestamp={%s}, Temp=%fn, Pitch=%fn, Roll=%fn", readingTimeStamp, readingTemp, readingPitch, readingRoll);
-    QString testmsg = QString::fromUtf8(testPrintString);
-    ui->outputText->appendPlainText(testmsg);
-    //ADD YOUR CODE HERE
+//    const char* jsonString = payload.toStdString().c_str();
+//    json_object *jObj = json_tokener_parse(jsonString);
+    //    double readingTemp = getTemp(jObj);
+//    double readingPitch = getPitch(jObj);
+//    double readingRoll = getRoll(jObj);
+//    char * readingTimeStamp = getTimeStamp(jObj);
+//    char testPrintString[100];
+//    sprintf(testPrintString, "Timestamp={%s}, Temp=%fn, Pitch=%fn, Roll=%fn", readingTimeStamp, readingTemp, readingPitch, readingRoll);
+
+//    QString testmsg = QString::fromUtf8(testPrintString);
+    double readingTemp = getTemp(payload);
+    double readingRoll = getRoll(payload);
+    double readingPitch = getPitch(payload);
+    QString readingTimeStamp = getTimeStamp(payload);
+    switch (this->chosenGraph) {
+    case 1:updateGraph((int)readingTemp);break;
+    case 2:updateGraph((int)readingPitch);break;
+    case 3:updateGraph((int)readingRoll);break;
+    default: qDebug() << "Somethingwrong" << endl;
+
+    }
+    updateGraph((int)readingRoll);
+
 }
 
 void connlost(void *context, char *cause) {
@@ -120,63 +140,65 @@ void connlost(void *context, char *cause) {
     qDebug() << "Connection Lost" << endl;
 }
 
-double MainWindow::getTemp(json_object *jObj) {
-    json_object_object_foreach(jObj, key, val) {
-        if (strcmp(key, "d") == 0) {
-            json_object_object_foreach(val, topicKey, topicVal) {
-            if (strcmp(topicKey, "CPUTemp") == 0) {
-               return json_object_get_double(topicVal);
-            }
-            }
-        }
-    }
-    return -1.0;
+double MainWindow::getTemp(QString payload) {
+    QJsonDocument doc = QJsonDocument::fromJson(payload.toUtf8());
+    QJsonObject obj = doc.object();
+    QJsonObject sample = obj["d"].toObject();
+    return sample["CPUTemp"].toDouble();
 }
 
-double MainWindow::getPitch(json_object *jObj) {
-    json_object_object_foreach(jObj, key, val) {
-        if (strcmp(key, "d") == 0) {
-            json_object_object_foreach(val, topicKey, topicVal) {
-            if (strcmp(topicKey, "Pitch") == 0) {
-               return json_object_get_double(topicVal);
-            }
-            }
-        }
-    }
-    return 0;
+double MainWindow::getPitch(QString payload) {
+    QJsonDocument doc = QJsonDocument::fromJson(payload.toUtf8());
+    QJsonObject obj = doc.object();
+    QJsonObject sample = obj["d"].toObject();
+    return sample["Pitch"].toDouble();
 }
 
-double MainWindow::getRoll(json_object *jObj) {
-    json_object_object_foreach(jObj, key, val) {
-        if (strcmp(key, "d") == 0) {
-            json_object_object_foreach(val, topicKey, topicVal) {
-            if (strcmp(topicKey, "Roll") == 0) {
-               return json_object_get_double(topicVal);
-            }
-            }
-        }
-    }
-    return 0;
+double MainWindow::getRoll(QString payload) {
+    QJsonDocument doc = QJsonDocument::fromJson(payload.toUtf8());
+    QJsonObject obj = doc.object();
+    QJsonObject d = obj["d"].toObject();
+    return d["Roll"].toDouble();
 }
 
-char * MainWindow::getTimeStamp(json_object *jObj) {
-    static char timestamp[25];
-    json_object_object_foreach(jObj, key, val) {
-        if (strcmp(key, "d") == 0) {
-            json_object_object_foreach(val, topicKey, topicVal) {
-            if (strcmp(topicKey, "ReadingTime") == 0) {
-               strcpy(timestamp, json_object_get_string(topicVal));
-               return timestamp;
-
-            }
-            }
-        }
-    }
+QString MainWindow::getTimeStamp(QString payload) {
+    QJsonDocument doc = QJsonDocument::fromJson(payload.toUtf8());
+    QJsonObject obj = doc.object();
+    QJsonObject d = obj["d"].toObject();
+    return d["ReadingTime"].toString();
 }
+
 
 void MainWindow::on_disconnectButton_clicked()
 {
     qDebug() << "Disconnecting from the broker" << endl;
     MQTTClient_disconnect(client, 10000);
     //MQTTClient_destroy(&client);
+}
+
+void MainWindow::on_temperatureButton_clicked()
+{
+    ui->customPlot->clearGraphs();
+    this->ui->customPlot->addGraph();
+    this->ui->customPlot->yAxis->setLabel("Temperature (Celcius)");
+    this->chosenGraph = 1;
+    this->ui->customPlot->replot();
+}
+
+void MainWindow::on_pitchButton_clicked()
+{
+    ui->customPlot->clearGraphs();
+    this->ui->customPlot->addGraph();
+    this->ui->customPlot->yAxis->setLabel("Pitch (degrees)");
+    this->chosenGraph = 2;
+    this->ui->customPlot->replot();
+}
+
+void MainWindow::on_rollButton_clicked()
+{
+    ui->customPlot->clearGraphs();
+    this->ui->customPlot->addGraph();
+    this->ui->customPlot->yAxis->setLabel("Roll (degrees)");
+    this->chosenGraph = 3;
+    this->ui->customPlot->replot();
 }

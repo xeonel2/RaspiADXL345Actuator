@@ -31,7 +31,14 @@ private slots:
     void on_upButton_clicked();
     void on_connectButton_clicked();
     void on_disconnectButton_clicked();
+    void updateGraph(int value);
     void on_MQTTmessage(QString message);
+
+    void on_temperatureButton_clicked();
+
+    void on_pitchButton_clicked();
+
+    void on_rollButton_clicked();
 
 signals:
     void messageSignal(QString message);
@@ -39,13 +46,13 @@ signals:
 private:
     Ui::MainWindow *ui;
     void update();
-    int count, time;
+    int count, time, chosenGraph;
     MQTTClient client;
     volatile MQTTClient_deliveryToken deliveredtoken;
-    double getTemp(json_object *jObj);
-    double getPitch(json_object *jObj);
-    double getRoll(json_object *jObj);
-    char * getTimeStamp(json_object *jObj);
+    double getTemp(QString payload);
+    double getPitch(QString payload);
+    double getRoll(QString payload);
+    QString getTimeStamp(QString payload);
 
     friend void delivered(void *context, MQTTClient_deliveryToken dt);
     friend int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message);
