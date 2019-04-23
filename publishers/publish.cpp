@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string.h>
 #include "MQTTClient.h"
+#include <ctime>
 #define  CPU_TEMP "/sys/class/thermal/thermal_zone0/temp"
 using namespace std;
 
@@ -25,6 +26,16 @@ float getCPUTemperature() {        // get the CPU temperature
    return (((float)cpuTemp)/1000);
 }
 
+//Returns current time string
+char * getTimeNow() {
+    static char timebuff[50];
+    time_t t = time(0);
+    tm* timeNow = localtime(&t);
+    sprintf(timebuff, "%02d-%02d-%04d %02d:%02d:%02d", timeNow->tm_mday, (timeNow->tm_mon) + 1, timeNow->tm_year + 1900, timeNow->tm_hour, timeNow->tm_min, timeNow->tm_sec > 59 ? 59 : timeNow->tm_sec);
+    return timebuff;
+}
+
+
 int main(int argc, char* argv[]) {
    char str_payload[100];          // Set your max message size here
    MQTTClient client;
@@ -41,7 +52,7 @@ int main(int argc, char* argv[]) {
       cout << "Failed to connect, return code " << rc << endl;
       return -1;
    }
-   sprintf(str_payload, "{\"d\":{\"CPUTemp\": %f }}", getCPUTemperature());
+   sprintf(str_payload, "{\"d\":{\"CPUTemp\": %f , \"ReadingTime\": \"%s\"}}", getCPUTemperature(), getTimeNow());
    pubmsg.payload = str_payload;
    pubmsg.payloadlen = strlen(str_payload);
    pubmsg.qos = QOS;
