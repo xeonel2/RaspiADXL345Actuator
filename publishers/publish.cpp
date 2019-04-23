@@ -6,6 +6,7 @@
 #include "MQTTClient.h"
 #include "ADXL345.h"
 #include <ctime>
+#include <unistd.h>
 #define  CPU_TEMP "/sys/class/thermal/thermal_zone0/temp"
 using namespace std;
 using namespace exploringRPi;
@@ -18,6 +19,7 @@ using namespace exploringRPi;
 #define TOPIC      "SensorData/CPUTempPitchRoll"
 #define QOS        1
 #define TIMEOUT    10000L
+#define UPDATEINTERVAL 5 
 
 float getCPUTemperature() {        // get the CPU temperature
    int cpuTemp;                    // store as an int
@@ -37,13 +39,34 @@ char * getTimeNow() {
     return timebuff;
 }
 
+//Keep publishing sensor data in the defined INTERVAL
+void keepPublishing(ADXL345* sensor, MQTTClient* client) {
+    char str_payload[100];          // Set your max message size here
+    int rc; //return code
+    for(;;) {
+        sensor->readSensorState();
+        sprintf(str_payload, "{\"d\":{\"CPUTemp\": %f , \"ReadingTime\": \"%s\" ,\"Pitch\": %f, \"Roll\": %f}}", getCPUTemperature(), getTimeNow(), sensor->getPitch(), sensor->getRoll());
+        MQTTClient_deliveryToken token;
+        MQTTClient_message pubmsg = MQTTClient_message_initializer;
+        pubmsg.payload = str_payload;
+        pubmsg.payloadlen = strlen(str_payload);
+        pubmsg.qos = QOS;
+        pubmsg.retained = 0;
+        MQTTClient_publishMessage(*client, TOPIC, &pubmsg, &token);
+        cout << "Waiting for up to " << (int)(TIMEOUT/1000) <<
+        " seconds for publication of " << str_payload <<
+        " \non topic " << TOPIC << " for ClientID: " << CLIENTID << endl;
+        rc = MQTTClient_waitForCompletion(*client, token, TIMEOUT);
+        cout << "Message with token " << (int)token << " delivered." << endl;
+        usleep(1000000 * UPDATEINTERVAL);
+    }
+}
+
 
 int main(int argc, char* argv[]) {
-   char str_payload[100];          // Set your max message size here
    MQTTClient client;
    MQTTClient_connectOptions opts = MQTTClient_connectOptions_initializer;
    MQTTClient_message pubmsg = MQTTClient_message_initializer;
-   MQTTClient_deliveryToken token;
    MQTTClient_create(&client, ADDRESS, CLIENTID, MQTTCLIENT_PERSISTENCE_NONE, NULL);
    opts.keepAliveInterval = 20;
    opts.cleansession = 1;
@@ -58,19 +81,7 @@ int main(int argc, char* argv[]) {
    ADXL345 sensor(1,0x53);
    sensor.setResolution(ADXL345::NORMAL);
    sensor.setRange(ADXL345::PLUSMINUS_4_G);
-   sensor.readSensorState();
-
-   sprintf(str_payload, "{\"d\":{\"CPUTemp\": %f , \"ReadingTime\": \"%s\" ,\"Pitch\": %f, \"Roll\": %f}}", getCPUTemperature(), getTimeNow(), sensor.getPitch(), sensor.getRoll());
-   pubmsg.payload = str_payload;
-   pubmsg.payloadlen = strlen(str_payload);
-   pubmsg.qos = QOS;
-   pubmsg.retained = 0;
-   MQTTClient_publishMessage(client, TOPIC, &pubmsg, &token);
-   cout << "Waiting for up to " << (int)(TIMEOUT/1000) <<
-        " seconds for publication of " << str_payload <<
-        " \non topic " << TOPIC << " for ClientID: " << CLIENTID << endl;
-   rc = MQTTClient_waitForCompletion(client, token, TIMEOUT);
-   cout << "Message with token " << (int)token << " delivered." << endl;
+   keepPublishing(&sensor,&client);
    MQTTClient_disconnect(client, 10000);
    MQTTClient_destroy(&client);
    return rc;

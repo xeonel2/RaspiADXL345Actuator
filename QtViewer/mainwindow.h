@@ -5,11 +5,11 @@
 #include <QDateTime>
 #include "MQTTClient.h"
 
-#define ADDRESS     "tcp://127.0.0.1:1883"
-#define CLIENTID    "rpi2"
-#define AUTHMETHOD  "molloyd"
-#define AUTHTOKEN   "password"
-#define TOPIC       "ee513/CPUTemp"
+#define ADDRESS     "tcp://192.227.147.152:1883"
+#define CLIENTID    "qtclient"
+#define AUTHMETHOD  "xeonel"
+#define AUTHTOKEN   "pwd"
+#define TOPIC       "SensorData/CPUTempPitchRoll"
 #define PAYLOAD     "Hello World!"
 #define QOS         1
 #define TIMEOUT     10000L
